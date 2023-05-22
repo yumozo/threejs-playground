@@ -1,0 +1,11 @@
+Model Information:
+* title:	Stylized Low Poly Girl Character
+* source:	https://sketchfab.com/3d-models/stylized-low-poly-girl-character-c77426c4db8b459bb8ecb2afed6a2fbc
+* author:	micaelsampaio (https://sketchfab.com/micaelsampaio)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Stylized Low Poly Girl Character" (https://sketchfab.com/3d-models/stylized-low-poly-girl-character-c77426c4db8b459bb8ecb2afed6a2fbc) by micaelsampaio (https://sketchfab.com/micaelsampaio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

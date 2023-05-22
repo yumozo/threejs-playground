@@ -1,0 +1,31 @@
+{
+  "name": "3d-playground",
+  "version": "0.1.0",
+  "description": "no description",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "esbuild": "node ./build.mjs",
+    "build": "webpack"
+  },
+  "author": "Juri Kaplan",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "styled-components": "^6.0.0-rc.1",
+    "three": "^0.152.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.6",
+    "@types/react-dom": "^18.2.4",
+    "@types/styled-components": "^5.1.26",
+    "@types/three": "^0.152.0",
+    "esbuild": "^0.17.19",
+    "file-loader": "^6.2.0",
+    "stats.js": "^0.17.0",
+    "ts-loader": "^9.4.2",
+    "webpack": "^5.83.1",
+    "webpack-cli": "^5.1.1"
+  }
+}

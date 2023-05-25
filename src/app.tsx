@@ -1,9 +1,7 @@
 import { createRoot } from 'react-dom/client'
-import Home from '@pages/home/home'
-import GamePage from "@pages/game/game-page"
+import GamePage from '@pages/game/game-page'
 // import Game from '@pages/game/game'
-import { context3D, gameContext, use3DGame } from '@context/context3D'
-import { SceneLoader } from '@pages/home/sceneLoader'
+import { gameContext } from '@context/context3D'
 import { ReactNode, useState } from 'react'
 import { GlobalStyle } from '@styles/global'
 import { Game } from '@game/game'
@@ -13,7 +11,6 @@ function main() {
   <div id="root"></div>
   <div id="scene-container"></div>>
   `
-
   const container = document.getElementById('scene-container')
   container.style.position = 'absolute'
   container.style.top = '0'
@@ -24,19 +21,19 @@ function main() {
 
   const game = new Game(container)
 
-  // function App() {
-  //   const [gameScene, setGameScene] = useState(game)
+  function App() {
+    const [gameScene, setGameScene] = useState(game)
 
-  //   return (
-  //     <gameContext.Provider value={gameScene}>
-  //       <GlobalStyle />
-  //       <GamePage />
-  //     </gameContext.Provider>
-  //   )
-  // }
+    return (
+      <gameContext.Provider value={gameScene}>
+        <GlobalStyle />
+        <GamePage />
+      </gameContext.Provider>
+    )
+  }
 
-  // const root = createRoot(document.getElementById('root'))
-  // root.render(<App />)
+  const root = createRoot(document.getElementById('root'))
+  root.render(<App /> as ReactNode)
 
   game.start()
 }

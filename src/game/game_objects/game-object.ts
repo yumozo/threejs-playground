@@ -40,7 +40,7 @@ export class GameObject {
     this.lookDirection.normalize()
   }
 
-  public update(): void {}
+  public update(): void { }
 
   /**
    * Moves object to the target position
@@ -57,16 +57,16 @@ export class GameObject {
     console.log('movement direction: ', movementDirection)
 
     const whereToLook = new three.Vector3()
-
+    
+    // Make a move
+    movement()
     // Current position + mov.dir. = look direction
     whereToLook.addVectors(this.model.position, movementDirection)
-    whereToLook.z = this.model.position.z
+    whereToLook.y = this.model.position.y
     console.log('where to look: ', whereToLook)
     this.model.lookAt(whereToLook)
     console.log('prev pos: ', this.model.position)
 
-    // Make a move
-    movement()
 
     // console.log('current pos: ', this.model.position, '\n')
     // console.log('rot x: ', three.MathUtils.radToDeg(this.model.rotation.x))
@@ -77,8 +77,8 @@ export class GameObject {
 
   moveForward(): void {
     const movementVector = this.model.position.clone()
-    movementVector.x += this.speed
-    movementVector.y += this.speed
+    // movementVector.x += this.speed
+    movementVector.z += this.speed
 
     const movement = () => {
       this.model.position.copy(movementVector)
@@ -87,8 +87,8 @@ export class GameObject {
   }
   moveBackward(): void {
     const movementVector = this.model.position.clone()
-    movementVector.x -= this.speed
-    movementVector.y -= this.speed
+    // movementVector.x -= this.speed
+    movementVector.z -= this.speed
 
     const movement = () => {
       this.model.position.copy(movementVector)
@@ -97,8 +97,9 @@ export class GameObject {
   }
   moveRight(): void {
     const movementVector = this.model.position.clone()
-    movementVector.x += this.speed
-    movementVector.y -= this.speed
+    // movementVector.x += this.speed
+    movementVector.x -= this.speed
+    // movementVector.z -= this.speed
 
     const movement = () => {
       this.model.position.copy(movementVector)
@@ -107,8 +108,9 @@ export class GameObject {
   }
   moveLeft(): void {
     const movementVector = this.model.position.clone()
-    movementVector.x -= this.speed
-    movementVector.y += this.speed
+    // movementVector.x -= this.speed
+    movementVector.x += this.speed
+    // movementVector.z += this.speed
 
     const movement = () => {
       this.model.position.copy(movementVector)

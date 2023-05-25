@@ -41,11 +41,11 @@ export class GameCamera {
       50
     )
 
-    this.camera.position.set(-5, -5, 5)
-    this.camera.up.set(0, 0, 1)
+    this.camera.position.set(5, 5, -5)
+    this.camera.up.set(0, 1, 0)
     // this.camera
     // this.camera.position.set(-5, -5, 5)
-    this.camera.rotation.set(90, 0, 10)
+    // this.camera.rotation.set(90, 0, 10)
     this.camera.lookAt(0, 0, 0)
     this.camera.zoom = 3
   }
@@ -77,15 +77,15 @@ export class GameCamera {
   }
   public rotateCameraOnCenter(direction: string): void {
     // Y axis to rotate around
-    let z: number
+    let y: number
     if (direction === 'left') {
-      z = -1
+      y = -1
     } else if (direction === 'right') {
-      z = 1
+      y = 1
     } else {
       throw new Error('Invalid argument passed to rotateCameraOnCenter')
     }
-    const qm = new three.Quaternion(0, 0, z)
+    const qm = new three.Quaternion(0, y, 0)
 
     this.camera.applyQuaternion(qm)
     this.camera.quaternion.normalize()
@@ -100,14 +100,14 @@ export class GameCamera {
   }
 
   public moveCameraUp() {
-    this.camera.position.y -= 0.1
+    this.camera.position.z -= 0.1
     this.camera.position.x += 0.1
 
     console.log(this.camera.position)
     console.log(this.camera.rotation, '---\n')
   }
   public moveCameraDown() {
-    this.camera.position.y += 0.1
+    this.camera.position.z += 0.1
     this.camera.position.x -= 0.1
 
     console.log(this.camera.position)
@@ -115,14 +115,14 @@ export class GameCamera {
   }
   public moveCameraRight() {
     this.camera.position.x -= 0.1
-    this.camera.position.y -= 0.1
+    this.camera.position.z -= 0.1
 
     console.log(this.camera.position)
     console.log(this.camera.rotation, '---\n')
   }
   public moveCameraLeft() {
     this.camera.position.x += 0.1
-    this.camera.position.y += 0.1
+    this.camera.position.z += 0.1
 
     console.log(this.camera.position)
     console.log(this.camera.rotation, '---\n')

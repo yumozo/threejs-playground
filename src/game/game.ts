@@ -5,14 +5,17 @@ import { GameCamera } from './components/camera'
 import { createGizmo } from './components/gizmo'
 import { createLight as createDirectionalLight } from './components/light'
 import { GameObject } from './game_objects/game-object'
-import { GameControls } from './controls/gameControls'
+import { GameControls } from './controls/controls'
 
-import { Tile } from './level/tile'
+import { TileModel } from './level/tile-model'
 import LevelEditor from './level/level-editor'
 
 import girl_model from '@assets/girl/scene.gltf'
+import { JSON_map_example } from './JSON_map_example'
 import { GLTFLoader_holdAssets } from './system/GLTF_loader'
-import { Loop } from './system/game-loop'
+import { Loop } from './system/loop'
+import { TileMap } from './level/tile-map'
+import { PlayerObject } from './game_objects/player-object'
 
 export class Game {
   private readonly renderer: three.WebGLRenderer
@@ -25,10 +28,10 @@ export class Game {
   private aspectRatio: number
   private readonly levelEditor: LevelEditor
   private controls: GameControls
-  private sceneContainer: HTMLDivElement
+  private sceneContainer: HTMLElement
   private loop: Loop
 
-  constructor(container: HTMLDivElement) {
+  constructor(container: HTMLElement) {
     this.start = this.start.bind(this)
     this.stop = this.stop.bind(this)
 
@@ -58,29 +61,26 @@ export class Game {
     // GAME LOOP
     this.loop = new Loop(this.camera, this.scene, this.renderer)
 
-    // GROUND MESH replace with tiles already (┬┬﹏┬┬)
-    const gg = new three.PlaneGeometry(10, 10)
-    const gm = new three.MeshToonMaterial({
-      color: '#fafef1',
-      side: three.DoubleSide
-    })
-    const plane = new three.Mesh(gg, gm)
-    plane.receiveShadow = true
-    this.scene.add(plane)
-
-    // GIZMO
-    const gizmo = createGizmo()
-    this.scene.add(gizmo)
+    // LEVEL
+    this.levelEditor = new LevelEditor(this.scene)
+    const map = new TileMap(JSON_map_example.layers[0].data, 10)
+    this.levelEditor.setMap(map)
+    // const gg = new three.PlaneGeometry(10, 10)
+    // const gm = new three.MeshToonMaterial({
+    //   color: '#fafef1',
+    //   side: three.DoubleSide
+    // })
+    // const plane = new three.Mesh(gg, gm)
+    // plane.receiveShadow = true
+    // this.scene.add(plane)
 
     // LIGHT
     const light = createDirectionalLight()
     this.scene.add(light)
     this.scene.add(light.target)
-
-    this.levelEditor = new LevelEditor(this.scene)
   }
 
-  start() {
+  start(): void {
     if (!this.renderer.domElement) return
 
     // Attach scene to the document
@@ -101,8 +101,9 @@ export class Game {
       (gltf) => {
         // LOAD CHARACTER
         const model = gltf.scene
-        model.up.set(0, 0, 1)
-        const player = new GameObject({ name: 'player', model })
+        console.log(model.rotation)
+        const player = new PlayerObject({ name: 'player', model })
+        player.attachCamera(this.camera.getCamera())
         player.spawn(this.scene)
 
         // SETUP CONTROLS
@@ -147,12 +148,16 @@ export class Game {
       }
     )
 
-    // Mouse
-    document.addEventListener('mousemove', this.onMouseMove)
+    // GIZMO
+    const gizmo = createGizmo()
+    this.scene.add(gizmo)
+
+    // MOUSE
+    // document.addEventListener('mousemove', this.onMouseMove)
     this.handleWheel()
 
-    // LEVEL EDIT
-    this.buildLevel()
+    // LEVEL EDIT (but now is just build it)
+    this.renderLevel()
 
     console.log(this.camera.getCamera().position)
     console.log(this.camera.getCamera().rotation, '---\n')
@@ -161,7 +166,7 @@ export class Game {
     this.loop.start()
   }
 
-  stop() {
+  stop(): void {
     this.loop.stop()
   }
 
@@ -179,22 +184,9 @@ export class Game {
     })
   }
 
-  private buildLevel() {
-    const tileSize = 1
-    const numRows = 10
-    const numColumns = 10
+  private renderLevel() {
+    this.levelEditor.render()
 
-    for (let row = 0; row < numRows; row++) {
-      for (let col = 0; col < numColumns; col++) {
-        const tile = new Tile({
-          position: new three.Vector2(col * tileSize, row * tileSize),
-          size: tileSize,
-          color: '#fff'
-        })
-        this.levelEditor.addTile(tile)
-      }
-    }
+    console.log(this.scene.children)
   }
-
-  public init() {}
 }

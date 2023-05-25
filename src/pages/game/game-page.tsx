@@ -14,9 +14,8 @@ export default function GamePage() {
   return (
     <>
       <h1 style={{ textAlign: 'center', userSelect: 'none' }}>Hello There!</h1>
-      {/* <div id="scene" ref={sceneRef}></div> */}
+      
       <Overlay />
-      <div id="start"></div>
     </>
   )
 }

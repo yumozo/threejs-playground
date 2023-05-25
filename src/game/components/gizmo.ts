@@ -8,8 +8,7 @@ export function createGizmo(): three.Object3D {
   const axisPointerGeo = new three.ConeGeometry(0.1, 0.5, 4)
   const axisPointerMat = new three.MeshBasicMaterial()
 
-  // Make it overlay 
-  // @note[23-05-2023] It doesn't work as I want it to. It renders BEHIND the player.
+  // Make it overlay part 1
   axisPointerMat.depthTest = false
 
   const xAxisMat = axisPointerMat.clone()
@@ -37,6 +36,9 @@ export function createGizmo(): three.Object3D {
   gizmo.add(xaxis)
   gizmo.add(yaxis)
   gizmo.add(zaxis)
+
+  // Make it overlay part 2
+  gizmo.renderOrder = 999
 
   return gizmo
 }

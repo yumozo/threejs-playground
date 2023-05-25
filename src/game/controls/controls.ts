@@ -16,7 +16,7 @@ export class GameControls implements IControls {
   private gamepadAPI = gamepadAPI
 
   constructor() {
-    this.adrStr = '[controls->removeKey]: '
+    this.adrStr = '[controls]: '
     this.savedOnDownKeysAsStr = new Set()
     this.savedOnDownKeysAsNum = new Set()
     this.savedOnReleaseKeys = new Set()

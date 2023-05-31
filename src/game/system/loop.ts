@@ -4,10 +4,12 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 import Stats from 'stats.js'
-import { GameCamera } from '@game/components/camera'
-import { gamepadAPI } from '../controls/gamepadAPI'
+import { GameCamera } from '@game/components/game-camera'
+// import { gamepadAPI } from '../controls/!gamepad-API'
 import { ShaderPassManager } from './post-processing/shader-pass-manager'
 import { createTestPass } from './post-processing/shader-pass-factory'
+import { InputManager } from '@game/system/input/input-manager'
+import { GameScene } from './game-scene'
 
 /**
  * Game Loop. Keeps track of animated objects and renders the scene to the
@@ -15,24 +17,35 @@ import { createTestPass } from './post-processing/shader-pass-factory'
  */
 export class Loop {
   private camera: GameCamera
-  private scene: Scene
+  private scene: GameScene
   private renderer: WebGLRenderer
   private composer: EffectComposer
   private shaderPassManager: ShaderPassManager
-  private readonly updatables: []
   private readonly clock: Clock
+  /**
+   * The first component is a function's name and the second is function itself.
+   */
+  private readonly registeredFunctions: Map<string, Function>
   // DEV TOOLS
   private statsFPS: Stats
   private statsMS: Stats
+  // INPUTS
+  private inputManager: InputManager
 
-  constructor(camera: GameCamera, scene: Scene, renderer: WebGLRenderer) {
+  constructor(camera: GameCamera, scene: GameScene, renderer: WebGLRenderer) {
+    // BINDS
+    this.registerFunction = this.registerFunction.bind(this)
+
     this.camera = camera
     this.scene = scene
     this.renderer = renderer
 
+    // Init functions to play
+    this.registeredFunctions = new Map()
+
     // Setup an EffectComposer for post-processing
     this.composer = new EffectComposer(this.renderer)
-    const renderPass = new RenderPass(this.scene, this.camera.getCamera())
+    const renderPass = new RenderPass(this.scene.getScene(), this.camera.getCamera())
     this.composer.addPass(renderPass)
 
     // Setup a ShaderPassManager to manage shader passes
@@ -62,9 +75,6 @@ export class Loop {
     // Init clock
     this.clock = new Clock()
 
-    // Init updatable objects in scene
-    this.updatables = []
-
     // DEV TOOLS
     // STATISTICS: FPS, ms
     this.statsFPS = new Stats()
@@ -76,6 +86,15 @@ export class Loop {
     document.body.appendChild(this.statsFPS.dom)
     this.statsMS.dom.style.left = '80px'
     document.body.appendChild(this.statsMS.dom)
+  }
+
+  public registerFunction(func: Function) {
+    // this.registeredFunctions.set(func.name, func)
+    this.registerFunction[func.name] = func
+  }
+
+  public setInputManager(inputManger: InputManager) {
+    this.inputManager = inputManger
   }
 
   /**
@@ -114,15 +133,25 @@ export class Loop {
     // Only call the getDelta function once per frame!
     const time = this.clock.getDelta()
 
-    gamepadAPI.update()
+    // gamepadAPI.update()
+    if (this.inputManager) {
+      this.inputManager.update()
+    }
 
     const canvas = this.renderer.domElement
 
-    this.camera.update(canvas)
-
-    for (const object of this.updatables) {
-      // object.update()
+    // console.log("[Loop/tick]: 'call' registered functions: ", this.registerFunction)
+    for (const funcName in this.registeredFunctions) {
+      const func = this.registeredFunctions.get(funcName)
+      console.log(`[Loop/tick]: function ${func} should be played`)
+      func(time)
     }
+
+    // Should be in the GameScene
+    this.camera.updateView(canvas)
+
+    // Update all the objects in the scene
+    this.scene.update(time)
 
     // Render a frame
     // this.renderer.render(this.scene, this.camera.getCamera())

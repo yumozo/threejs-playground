@@ -1,10 +1,10 @@
-export interface Coordinates {
+export interface ICoordinates {
   getX(i: number): number
   getY(i: number): number
   getI(x: number, y: number): number
 }
 
-export class RowFirstCoordinates implements Coordinates {
+export class RowFirstCoordinates implements ICoordinates {
   public static GetX(i: number, width: number): number {
     return i % width
   }

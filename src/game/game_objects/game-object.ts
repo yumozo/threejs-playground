@@ -1,124 +1,100 @@
+import { ObjectControls } from '@game/controls/object-controls'
+import { TileType } from '@game/game_objects/tile-object'
+import { IUpdatable } from '@game/system/interface/IUpdatable'
+import { ModelLoader } from '@game/system/model-loader'
+import { AnimatedModel } from '@game/system/rendering/mesh'
 import * as three from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
-export interface Config {
+export interface GameObjectConfig {
   name?: string
-  model?: three.Object3D
+  // model?: three.Object3D | string
   speed?: number
+  position?: three.Vector3
 }
 
-export class GameObject {
-  public name: string
-  public loader: any
+export class GameObject implements IUpdatable {
+  public readonly name: string
+  public readonly loader: any
+  public readonly controls: ObjectControls
 
-  protected speed: number
+  protected position: three.Vector3
+  protected type: any | TileType
+  protected modelLoader: ModelLoader
   protected lookDirection: three.Vector3
   protected model: three.Object3D
 
-  // controls
-
-  constructor(config?: Config) {
+  constructor(config?: GameObjectConfig) {
     // BINDS
-    this.moveForward = this.moveForward.bind(this)
-    this.moveBackward = this.moveBackward.bind(this)
-    this.moveRight = this.moveRight.bind(this)
-    this.moveLeft = this.moveLeft.bind(this)
+    this.update = this.update.bind(this)
+    this.onModelLoad = this.onModelLoad.bind(this)
+
+    this.modelLoader = ModelLoader.getInstance()
 
     // Settings
     this.name = config.name || 'noname'
-    this.model =
-      config.model ||
-      (() => {
-        const geo = new three.BoxGeometry(1)
-        const mat = new three.MeshToonMaterial()
-        const model = new three.Mesh(geo, mat)
-        return model
-      })()
-    this.speed = config.speed || 0.1
+    this.position = config.position || new three.Vector3()
+    // this.model = this.modelLoader.models.get(this.name)
 
     // Look forward at spawn
     this.lookDirection = new three.Vector3(1, 1, 0)
     this.lookDirection.normalize()
   }
 
-  public update(): void { }
+  public loadModel(url: string, scene: three.Scene) {
+    this.modelLoader.loadModel(url, this, scene, this.onModelLoad)
+  }
+  
+  protected onModelLoad(): void {
+    this.model = this.modelLoader.models.get(this.name)
+  }
+
+  public getPosition(): three.Vector3 {
+    if (!this.model) {
+      return this.position
+    } else {
+      return new three.Vector3(
+        this.model.position.x,
+        this.model.position.y,
+        this.model.position.z
+      )
+    }
+  }
+
+  public setPosition(value: three.Vector3) {
+    this.position = new three.Vector3(value.x, value.y, value.z)
+    if (this.model) {
+      this.model.position.copy(this.position) // Ignore the error
+    }
+  }
+  // public setModel(path: string): Promise<three.Object3D> {
+  //   const loader = new GLTFLoader()
+  //   return new Promise((resolve, reject) => {
+  //     loader.load(
+  //       path,
+  //       (gltf) => {
+  //         const model = gltf.scene
+  //         this.model = model
+  //         resolve(model)
+  //       },
+  //       undefined,
+  //       (err) => reject(err)
+  //     )
+  //   })
+  // }
 
   /**
-   * Moves object to the target position
-   * @param position Movement target position
+   * Update frame...
    */
-  public moveTo(position: three.Vector3): void {
-    this.model.position.copy(position)
+  public update(time: number): void {
+    // Here, you can update the position, rotation, or any other property of the model.
+    // For example, let's move the model to the right by 1 unit per second:
+    // const speed = 1 // 1 unit per second
+    // const movement = new three.Vector3(speed * time, 0, 0) // Multiply by timeDelta to make movement framerate independent
+    // this.model.position.add(movement)
   }
 
-  protected move(movement: Function, movementVector: three.Vector3) {
-    const movementDirection = new three.Vector3()
-    movementDirection.subVectors(movementVector, this.model.position)
-
-    console.log('movement direction: ', movementDirection)
-
-    const whereToLook = new three.Vector3()
-    
-    // Make a move
-    movement()
-    // Current position + mov.dir. = look direction
-    whereToLook.addVectors(this.model.position, movementDirection)
-    whereToLook.y = this.model.position.y
-    console.log('where to look: ', whereToLook)
-    this.model.lookAt(whereToLook)
-    console.log('prev pos: ', this.model.position)
-
-
-    // console.log('current pos: ', this.model.position, '\n')
-    // console.log('rot x: ', three.MathUtils.radToDeg(this.model.rotation.x))
-    // console.log('rot y: ', three.MathUtils.radToDeg(this.model.rotation.y))
-    // console.log('rot z: ', three.MathUtils.radToDeg(this.model.rotation.z))
-    // console.log('---')
-  }
-
-  moveForward(): void {
-    const movementVector = this.model.position.clone()
-    // movementVector.x += this.speed
-    movementVector.z += this.speed
-
-    const movement = () => {
-      this.model.position.copy(movementVector)
-    }
-    this.move(movement, movementVector)
-  }
-  moveBackward(): void {
-    const movementVector = this.model.position.clone()
-    // movementVector.x -= this.speed
-    movementVector.z -= this.speed
-
-    const movement = () => {
-      this.model.position.copy(movementVector)
-    }
-    this.move(movement, movementVector)
-  }
-  moveRight(): void {
-    const movementVector = this.model.position.clone()
-    // movementVector.x += this.speed
-    movementVector.x -= this.speed
-    // movementVector.z -= this.speed
-
-    const movement = () => {
-      this.model.position.copy(movementVector)
-    }
-    this.move(movement, movementVector)
-  }
-  moveLeft(): void {
-    const movementVector = this.model.position.clone()
-    // movementVector.x -= this.speed
-    movementVector.x += this.speed
-    // movementVector.z += this.speed
-
-    const movement = () => {
-      this.model.position.copy(movementVector)
-    }
-    this.move(movement, movementVector)
-  }
-
-  public spawn(scene: three.Scene): void {
+  public addTo(scene: three.Scene): void {
     scene.add(this.model)
   }
 }

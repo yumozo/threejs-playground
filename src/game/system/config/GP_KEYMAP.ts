@@ -1,0 +1,23 @@
+export const mapping = {
+  'GamepadButton0': 'A',
+  'GamepadButton1': 'B',
+  'GamepadButton2': 'X',
+  'GamepadButton3': 'Y',
+  'GamepadButton4': 'LB',
+  'GamepadButton5': 'RB',
+  'GamepadButton6': 'LT',
+  'GamepadButton7': 'RT',
+  'GamepadButton8': 'BACK',
+  'GamepadButton9': 'START',
+  'GamepadButton10': 'LS_PRESS',
+  'GamepadButton11': 'RS_PRESS',
+  'GamepadButton12': 'DPAD_UP',
+  'GamepadButton13': 'DPAD_DOWN',
+  'GamepadButton14': 'DPAD_LEFT',
+  'GamepadButton15': 'DPAD_RIGHT',
+  'GamepadButton16': 'GUIDE',
+  'GamepadAxis0': 'LS_HORI',
+  'GamepadAxis1': 'LS_VERT',
+  'GamepadAxis2': 'RS_HORI',
+  'GamepadAxis3': 'RS_VERT'
+}

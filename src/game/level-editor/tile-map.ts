@@ -1,5 +1,5 @@
-import { Coordinates, RowFirstCoordinates } from './coordinates'
-import { Tile } from './tile-model'
+import { ICoordinates, RowFirstCoordinates } from './coordinates'
+import { TileType } from '../game_objects/tile-object'
 
 /**
  * Used to represent an area without having to carry around a tile array.
@@ -21,10 +21,10 @@ interface IRegion {
 interface ITileMap {
   width: number
   height: number
-  tiles: Tile[]
-  coords: Coordinates
+  tiles: TileType[]
+  coords: ICoordinates
   getRegion: (region: IRegion) => ITileMap
-  fillRegion: (region: IRegion, contents: Tile) => ITileMap
+  fillRegion: (region: IRegion, contents: TileType) => ITileMap
   applyProcessors: (processors: TileMapProcessor[]) => ITileMap
 }
 
@@ -33,17 +33,17 @@ type TileMapProcessor = {
 }
 
 export class TileMap implements ITileMap {
-  public coords: RowFirstCoordinates
-  public readonly tiles: Tile[]
-  public readonly height: number
   public readonly width: number
+  public readonly height: number
+  public readonly tiles: TileType[]
+  public coords: RowFirstCoordinates
 
   /**
    * Fills new instance of TileMap with provided tiles array and returns the instance
    * @param tiles Reqtangular array of tiles (see next param)
    * @param width Must meet tiles.length % width === 0
    */
-  constructor(tiles: Tile[], width: number) {
+  constructor(tiles: TileType[], width: number) {
     // assert(tiles.length % width === 0)
     if (!(tiles.length % width === 0)) {
       throw new Error('[Map/ctor]Something wrong with your tileset size')
@@ -60,7 +60,7 @@ export class TileMap implements ITileMap {
   public static CreateEmpty(width: number, height: number) {
     const length = width * height
     // const tiles: Tile[] = zeroedArray(length)
-    const tiles: Tile[] = new Array<Tile>(length)
+    const tiles: TileType[] = new Array<TileType>(length)
     tiles.fill(0)
     return new TileMap(tiles, width)
   }

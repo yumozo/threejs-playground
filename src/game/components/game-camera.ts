@@ -1,3 +1,4 @@
+import { CameraContols } from '@game/controls/camera-controls'
 import * as three from 'three'
 
 export class GameCamera {
@@ -7,6 +8,7 @@ export class GameCamera {
   private height: number
   private aspectRatio: number
   private viewSize: number
+  private controls: CameraContols
   private readonly camera: three.OrthographicCamera
 
   constructor(
@@ -16,14 +18,11 @@ export class GameCamera {
     aspectRatio = width / height
   ) {
     // BINDS
-    this.rotateCameraOnCenter = this.rotateCameraOnCenter.bind(this)
     this.getCamera = this.getCamera.bind(this)
-    this.update = this.update.bind(this)
-    this.moveCameraUp = this.moveCameraUp.bind(this)
-    this.moveCameraDown = this.moveCameraDown.bind(this)
-    this.moveCameraRight = this.moveCameraRight.bind(this)
-    this.moveCameraLeft = this.moveCameraLeft.bind(this)
-    this.add = this.add.bind(this)
+    this.updateView = this.updateView.bind(this)
+
+    // Setup
+    this.controls = new CameraContols(this.camera)
 
     // SETTINGS
     this.width = width
@@ -50,7 +49,7 @@ export class GameCamera {
     this.camera.zoom = 3
   }
 
-  public update(canvas) {
+  public updateView(canvas: HTMLCanvasElement) {
     const width = canvas.clientWidth
     const height = canvas.clientHeight
     const aspect = canvas.clientWidth / canvas.clientHeight
@@ -74,62 +73,6 @@ export class GameCamera {
       let [x, y, z] = arguments
       this.camera.position.set(x, y, z)
     }
-  }
-  public rotateCameraOnCenter(direction: string): void {
-    // Y axis to rotate around
-    let y: number
-    if (direction === 'left') {
-      y = -1
-    } else if (direction === 'right') {
-      y = 1
-    } else {
-      throw new Error('Invalid argument passed to rotateCameraOnCenter')
-    }
-    const qm = new three.Quaternion(0, y, 0)
-
-    this.camera.applyQuaternion(qm)
-    this.camera.quaternion.normalize()
-    this.camera.position.applyQuaternion(qm)
-    this.camera.position.normalize()
-
-    // Preserve the distance of the camera from the origin
-    this.camera.position.multiplyScalar(new three.Vector3(5, 5, 5).length())
-
-    console.log(this.camera.position)
-    console.log(this.camera.rotation, '---\n')
-  }
-
-  public moveCameraUp() {
-    this.camera.position.z -= 0.1
-    this.camera.position.x += 0.1
-
-    console.log(this.camera.position)
-    console.log(this.camera.rotation, '---\n')
-  }
-  public moveCameraDown() {
-    this.camera.position.z += 0.1
-    this.camera.position.x -= 0.1
-
-    console.log(this.camera.position)
-    console.log(this.camera.rotation, '---\n')
-  }
-  public moveCameraRight() {
-    this.camera.position.x -= 0.1
-    this.camera.position.z -= 0.1
-
-    console.log(this.camera.position)
-    console.log(this.camera.rotation, '---\n')
-  }
-  public moveCameraLeft() {
-    this.camera.position.x += 0.1
-    this.camera.position.z += 0.1
-
-    console.log(this.camera.position)
-    console.log(this.camera.rotation, '---\n')
-  }
-
-  public add(target: any) {
-    this.camera.add(target)
   }
 
   public getCamera() {

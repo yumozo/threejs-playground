@@ -1,9 +1,12 @@
 import * as three from 'three'
-import { Config, GameObject } from './game-object'
+import { GameObjectConfig, GameObject } from './game-object'
+import { PlayerControl as PlayerControls } from '@game/controls/player-controls'
+import { GameCamera } from '@game/components/game-camera'
 
-interface PlayerConfig extends Config {
+interface PlayerConfig extends GameObjectConfig {
   // speed: number
-  camera?: three.Camera
+  // camera?: three.Camera
+  camera: GameCamera
 }
 
 /**
@@ -12,26 +15,33 @@ interface PlayerConfig extends Config {
  * @param camera Camera to be attached to the player object. Is optional parameter.
  */
 export class PlayerObject extends GameObject {
-  private camera: three.Camera
+  public controls: PlayerControls
+  private camera: GameCamera
 
   constructor(config: PlayerConfig) {
     super(config)
 
-    // Adding camera if provided
-    this.camera = config.camera || null
-    // Check if not
-    if (this.camera) {
-      // Attach camera to the model, again if provided
-      this.model.attach(this.camera)
-    }
+    // BINDS
+    this.onModelLoad = this.onModelLoad.bind(this)
+    this.attachCamera = this.attachCamera.bind(this)
+
+    // Adding CAMERA if provided
+    this.camera = config.camera
   }
 
-  /**
-   * Update frame...
-   */
   public update() {
+    if (this.model) {
+      this.camera.setPosition(this.model.position)
+    }
     // You can include any update code here
     // For example, you might want to check if the player has collided with anything
+  }
+
+  protected override onModelLoad(): void {
+    this.model = this.modelLoader.models.get(this.name)
+    this.model.attach(this.camera.getCamera())
+    this.controls = new PlayerControls(this.model)
+    this.controls.setupControls()
   }
 
   /**
@@ -40,7 +50,7 @@ export class PlayerObject extends GameObject {
    */
   public attachCamera(camera: three.Camera) {
     // Remove old camera
-    this.model.remove(this.camera)
+    this.model.remove(this.camera.getCamera())
     // Attach new one
     this.model.attach(camera)
   }

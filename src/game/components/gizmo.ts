@@ -12,11 +12,11 @@ export function createGizmo(): three.Object3D {
   axisPointerMat.depthTest = false
 
   const xAxisMat = axisPointerMat.clone()
-  xAxisMat.color = new three.Color(0xff0000)
+  xAxisMat.color = new three.Color(0xff2211)
   const yAxisMat = axisPointerMat.clone()
-  yAxisMat.color = new three.Color(0x00ff00)
+  yAxisMat.color = new three.Color(0x30ff30)
   const zAxisMat = axisPointerMat.clone()
-  zAxisMat.color = new three.Color(0x0000ff)
+  zAxisMat.color = new three.Color(0x1144ff)
 
   // Settings X axis pointer
   const xaxis = new three.Mesh(axisPointerGeo, xAxisMat)

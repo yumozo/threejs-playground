@@ -9,7 +9,7 @@ import { Game } from '@game/game'
 function main() {
   document.body.innerHTML = `
   <div id="root"></div>
-  <div id="scene-container"></div>>
+  <div id="scene-container"></div>
   `
   const container = document.getElementById('scene-container')
   container.style.position = 'absolute'

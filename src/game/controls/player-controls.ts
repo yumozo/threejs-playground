@@ -3,12 +3,11 @@ import { ObjectControls } from './object-controls'
 import { InputManager } from '../system/input/input-manager'
 
 export class PlayerControl extends ObjectControls {
-  // private input: Input
   private isJumping: boolean
   private isMovingLeft: boolean
   private isMovingRight: boolean
 
-  constructor(object: three.Object3D /* input: Input */) {
+  constructor(object: three.Object3D) {
     super(object)
 
     // BINDS
@@ -16,7 +15,7 @@ export class PlayerControl extends ObjectControls {
     this.setJumping = this.setJumping.bind(this)
     this.setMovingLeft = this.setMovingLeft.bind(this)
     this.setMovingRight = this.setMovingRight.bind(this)
-    
+
     // this.input = input
     this.isJumping = false
     this.isMovingLeft = false
@@ -52,39 +51,18 @@ export class PlayerControl extends ObjectControls {
     inputManager.registerKeyDown('ArrowRight', this.moveRight)
     inputManager.registerKeyDown('ArrowLeft', this.moveLeft)
     // inputManager.onKeyUp('ArrowUp', this.arrowUpRelease)
-    inputManager.registerKeyDown('y', () => {
-      this.camera.rotateCameraOnCenter('left')
-    })
-    inputManager.registerKeyDown('o', () => {
-      this.camera.rotateCameraOnCenter('right')
-    })
+
     // XBOX CONTROLLER
-    inputManager.registerKeyDown(
-      'DPAD_UP',
-      this.moveForward,
-      true,
-      true
-    )
+    // inputManager.registerKeyDown('LS_HORI', this.ph_moveBackward, false, false, true)
+    // inputManager.registerKeyDown('LS_VERT', this.ph_moveLeft, false, false, true)
+    // testing this one
+    inputManager.registerGamepadStick('LS_HORI', 'LS_VERT', this.ph_move)
+
+    inputManager.registerKeyDown('DPAD_UP', this.moveForward, true, true)
     inputManager.registerKeyDown('DPAD_DOWN', this.moveBackward, true)
     inputManager.registerKeyDown('DPAD_RIGHT', this.moveRight, true)
     inputManager.registerKeyDown('DPAD_LEFT', this.moveLeft, true)
-    inputManager.registerKeyDown(
-      'X',
-      () => this.setJumping(true),
-      true
-    )
-    inputManager.registerKeyDown(
-      'LB',
-      () => this.camera.rotateCameraOnCenter('left'),
-      true,
-      true
-    )
-    inputManager.registerKeyDown(
-      'RB',
-      () => this.camera.rotateCameraOnCenter('right'),
-      true,
-      true
-    )
+    inputManager.registerKeyDown('X', () => this.setJumping(true), true)
     inputManager.registerKeyDown(
       'BACK',
       () => {

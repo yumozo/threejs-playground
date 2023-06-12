@@ -1,13 +1,10 @@
-import { IUpdatable } from '@game/system/interface/IUpdatable'
+import { Updatable } from '@game/system/updatable'
 import * as three from 'three'
 
-export class ObjectControls implements IUpdatable {
-  // Define initial position and velocity
+export class ObjectControls implements Updatable {
   protected object: three.Object3D
-  protected position: three.Vector3
-  protected velocity: three.Vector3
-  // For debugging purpose, remove this later.
-  // There should be velocity only. remove this later.
+  protected position: three.Vector3 = new three.Vector3()
+  protected velocity: three.Vector3 // Not used yet
   protected speed = 0.1
 
   protected horizontalAxis: number
@@ -20,6 +17,12 @@ export class ObjectControls implements IUpdatable {
     this.moveBackward = this.moveBackward.bind(this)
     this.moveRight = this.moveRight.bind(this)
     this.moveLeft = this.moveLeft.bind(this)
+    // experimental
+    this.ph_move = this.ph_move.bind(this)
+    this.ph_moveForward = this.ph_moveForward.bind(this)
+    this.ph_moveBackward = this.ph_moveBackward.bind(this)
+    this.ph_moveLeft = this.ph_moveLeft.bind(this)
+    this.ph_moveRight = this.ph_moveRight.bind(this)
 
     this.object = object
 
@@ -45,62 +48,54 @@ export class ObjectControls implements IUpdatable {
     this.object.position.copy(position)
   }
 
-  protected move(movement: Function, movementVector: three.Vector3) {
-    const movementDirection = new three.Vector3()
-    movementDirection.subVectors(movementVector, this.object.position)
+  protected move(movement: Function, nextPosition: three.Vector3) {
+    const direction = new three.Vector3()
+    direction.copy(nextPosition)
 
-    console.log('movement direction: ', movementDirection)
+    // Calculate the movement vector
+    const currentPosition = this.object.position.clone()
+    const movementVector = direction.sub(currentPosition)
 
-    const whereToLook = new three.Vector3()
+    console.log('direction: ', movementVector)
 
     // Make a move
     movement()
-    // Current position + mov.dir. = look direction
-    whereToLook.addVectors(this.object.position, movementDirection)
-    whereToLook.y = this.object.position.y
-    console.log('where to look: ', whereToLook)
+
+    if (movementVector.length() < 0.01) return
+    const whereToLook = new three.Vector3()
+    // Current position + movementVector  = look direction
+    whereToLook.addVectors(this.object.position.clone(), movementVector)
+
+    // Set the rotation
     this.object.lookAt(whereToLook)
-    console.log('prev pos: ', this.object.position)
-
-    // console.log('current pos: ', this.object.position, '\n')
-    // console.log('rot x: ', three.MathUtils.radToDeg(this.object.rotation.x))
-    // console.log('rot y: ', three.MathUtils.radToDeg(this.object.rotation.y))
-    // console.log('rot z: ', three.MathUtils.radToDeg(this.object.rotation.z))
-    // console.log('---')
   }
 
-  moveBy(axisVector: three.Vector2 | three.Vector3): void {
-    if (
-      !(
-        axisVector instanceof three.Vector2 ||
-        axisVector instanceof three.Vector3
-      )
-    ) {
-      return
-    }
-    if (axisVector.x === 0 && axisVector.x === axisVector.y) {
-      return
-    }
-    if (axisVector instanceof three.Vector2) {
-      const movementVector = this.object.position.clone()
-      movementVector.x += movementVector.x * this.speed
-      movementVector.z += movementVector.y * this.speed
+  // moveBy(axisVector: three.Vector2 | three.Vector3): void {
+  //   if (!(axisVector instanceof three.Vector2 || axisVector instanceof three.Vector3)) {
+  //     return
+  //   }
+  //   if (axisVector.x === 0 && axisVector.x === axisVector.y) {
+  //     return
+  //   }
+  //   if (axisVector instanceof three.Vector2) {
+  //     const movementVector = this.object.position.clone()
+  //     movementVector.x += movementVector.x * this.speed
+  //     movementVector.z += movementVector.y * this.speed
 
-      const movement = () => {
-        this.object.position.copy(movementVector)
-      }
-      this.move(movement, movementVector)
-    }
-    if (axisVector instanceof three.Vector3) {
-      console.warn(
-        '[GameObject/moveBy]: Moving in 3D is not implemented yet. Please use two-dimensional vector instance.'
-      )
-    }
-  }
+  //     const movement = () => {
+  //       this.object.position.copy(movementVector)
+  //     }
+  //     this.move(movement, movementVector)
+  //   }
+  //   if (axisVector instanceof three.Vector3) {
+  //     console.warn(
+  //       '[GameObject/moveBy]: Moving in 3D is not implemented yet. Please use two-dimensional vector instance.'
+  //     )
+  //   }
+  // }
 
   moveForward(): void {
     const movementVector = this.object.position.clone()
-    // movementVector.x += this.speed
     movementVector.z += this.speed
 
     const movement = () => {
@@ -110,7 +105,6 @@ export class ObjectControls implements IUpdatable {
   }
   moveBackward(): void {
     const movementVector = this.object.position.clone()
-    // movementVector.x -= this.speed
     movementVector.z -= this.speed
 
     const movement = () => {
@@ -120,9 +114,7 @@ export class ObjectControls implements IUpdatable {
   }
   moveRight(): void {
     const movementVector = this.object.position.clone()
-    // movementVector.x += this.speed
     movementVector.x -= this.speed
-    // movementVector.z -= this.speed
 
     const movement = () => {
       this.object.position.copy(movementVector)
@@ -131,13 +123,46 @@ export class ObjectControls implements IUpdatable {
   }
   moveLeft(): void {
     const movementVector = this.object.position.clone()
-    // movementVector.x -= this.speed
     movementVector.x += this.speed
-    // movementVector.z += this.speed
 
     const movement = () => {
       this.object.position.copy(movementVector)
     }
     this.move(movement, movementVector)
+  }
+
+  // VELOCITY
+  public ph_move(x: number, y: number): void {
+    const velocity = new three.Vector3(-x, 0, y)
+    velocity.multiplyScalar(this.speed)
+
+    const movement = () => {
+      this.object.position.add(velocity)
+    }
+
+    // this.animate(movement)
+    const currentPos = this.object.position.clone()
+    const nextPositionVector = currentPos.add(velocity)
+    this.move(movement, nextPositionVector)
+  }
+
+  public ph_moveForward(value: number): void {
+    // const velocity = new three.Vector3(0, 0, -this.speed * value)
+    this.ph_move(0, -value)
+  }
+
+  public ph_moveBackward(value: number): void {
+    // const velocity = new three.Vector3(0, 0, this.speed * value)
+    this.ph_move(0, value)
+  }
+
+  public ph_moveLeft(value: number): void {
+    // const velocity = new three.Vector3(-this.speed * value, 0, 0)
+    this.ph_move(-value, 0)
+  }
+
+  public ph_moveRight(value: number): void {
+    // const velocity = new three.Vector3(this.speed * value, 0, 0)
+    this.ph_move(value, 0)
   }
 }

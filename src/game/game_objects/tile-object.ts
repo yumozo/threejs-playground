@@ -1,5 +1,5 @@
 import { GameObject, GameObjectConfig } from '@game/game_objects/game-object'
-import { IUpdatable } from '@game/system/interface/IUpdatable'
+import { Updatable } from '@game/system/updatable'
 import { ModelLoader } from '@game/system/model-loader'
 import * as three from 'three'
 

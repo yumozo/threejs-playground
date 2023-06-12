@@ -47,7 +47,10 @@ module.exports = {
       "@context": path.resolve(__dirname, "src/context/"),
       "@styles": path.resolve(__dirname, "src/styles/"),
       "@game": path.resolve(__dirname, "src/game/"),
-      "@assets": path.resolve(__dirname, "src/assets/")
+      "@assets": path.resolve(__dirname, "src/assets/"),
+      "@UI": path.resolve(__dirname, "src/components/UI/"),
+      "@hooks": path.resolve(__dirname, "src/hooks/"),
+      "@layout": path.resolve(__dirname, "./src/layout/")
     }
   },
   output: {

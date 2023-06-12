@@ -1,51 +1,57 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { SceneLoader } from './sceneLoader'
-import { use3D } from '@context/context3D'
+import { useGame } from '@context/game-context'
+import { styled } from 'styled-components'
+import Layout from '@layout/layout'
 
-export default function Home() {
-  const scene = use3D()
-  const [rotationDegree, setRotationDegree] = useState(-90)
-  const sceneRef = useRef(null)
-  const inputRef = useRef(null)
-  function handleRotationChange(e: React.ChangeEvent<HTMLInputElement>) {
-    e.preventDefault()
-    const value = e.target.value
-    setRotationDegree(Number(value))
-  }
-  function handleSubmit(e) {
-    e.preventDefault()
-  }
+const StyledLogin = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100vh;
+  /* text-align: center; */
+  padding: 0;
 
-  useEffect(() => {
-    console.log(scene)
+  button {
+    padding: 0.65em 0.5em;
+    background: var(--light-salmon);
+    font-weight: 500;
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    color: black;
+    border-radius: 10px;
 
-    scene.init()
-  }, [sceneRef])
-
-  useEffect(() => {
-    if (scene) {
-      scene.rotatePlane(rotationDegree)
+    &:focus,
+    &:hover {
+      background: var(--peach);
     }
-  }, [rotationDegree])
+  }
+`
+
+export default function HomePage({ status, setStatus }) {
+  const game = useGame()
+  if (!game) throw new Error("Game isn't initialized.")
 
   return (
-    <>
-      <h1 style={{ textAlign: 'center' }}>Hello There!</h1>
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <form onSubmit={handleSubmit} action="">
-          <label htmlFor="rotation degree">rotation degree</label>
-          <input
-            ref={inputRef}
-            style={{ width: '90px' }}
-            value={rotationDegree}
-            onChange={handleRotationChange}
-            type="number"
-            name="rotation degree"
-            id="rotation-degree"
-          />
-        </form>
-      </div>
-      <div id="scene" ref={sceneRef}></div>
-    </>
+    <Layout>
+      <StyledLogin>
+        <h1 style={{marginBottom: "1rem"}}>Welcome to the Game!</h1>
+
+        <div>
+          <button
+            onClick={() => {
+              if (status.gameStarted) {
+                console.warn('Game is already running!')
+              } else {
+                setStatus({ ...status, gameStarted: true })
+                game.start()
+              }
+            }}
+          >
+            Start
+          </button>
+        </div>
+      </StyledLogin>
+    </Layout>
   )
 }

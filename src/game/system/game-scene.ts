@@ -1,13 +1,12 @@
 import * as three from 'three'
-import { GameObject } from '@game/game_objects/game-object'
-import { IUpdatable } from '@game/system/interface/IUpdatable'
+import { Updatable } from '@game/system/updatable'
 
-export class GameScene implements IUpdatable {
-  private readonly scene: three.Scene | null
-  private readonly updatables: IUpdatable[]
+export class GameScene implements Updatable {
+  private readonly scene: three.Scene
+  private readonly updatables: Updatable[]
 
-  constructor(scene?: three.Scene) {
-    this.scene = scene || null
+  constructor(scene: three.Scene) {
+    this.scene = scene
     this.updatables = []
   }
 
@@ -15,7 +14,7 @@ export class GameScene implements IUpdatable {
   //   this.scene = scene
   // }
 
-  public addUpdatable(object: IUpdatable) {
+  public addUpdatable(object: Updatable) {
     this.updatables.push(object)
   }
 

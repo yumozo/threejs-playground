@@ -16,21 +16,19 @@ import { TileMap } from '@game/level-editor/tile-map'
 import { PlayerObject } from '@game/game_objects/player-object'
 import { ModelLoader } from './system/model-loader'
 import { GameObject } from './game_objects/game-object'
-import {GameScene} from "./system/game-scene"
+import { GameScene } from '@game/system/game-scene'
+import { Updatable } from '@game/system/updatable'
 
 export class Game {
-  public updatables: any[]
-
   // Should be in the camera class ⬇️
   private width: number
   private height: number
   private aspectRatio: number
   // Should be in the renderer class ⬇️
-  private canvas: HTMLCanvasElement
+  private canvas: HTMLCanvasElement | undefined
   private sceneContainer: HTMLElement
   // OK ⬇️
   private loop: Loop
-  private inputManager: InputManager
   private readonly viewSize: number // ❔ to the camera
   private readonly renderer: three.WebGLRenderer
   private readonly scene: three.Scene
@@ -43,7 +41,7 @@ export class Game {
     this.stop = this.stop.bind(this)
 
     // SETTINGS
-    // Settings container element to put the canvas there
+    // Setting container element to put the canvas in there
     this.sceneContainer = container
     // Viewport settings
     this.width = window.innerWidth
@@ -53,15 +51,9 @@ export class Game {
 
     // SCENE
     this.scene = new three.Scene()
-    this.inputManager = InputManager.getInstance()
 
     // CAMERA
-    this.camera = new GameCamera(
-      this.width,
-      this.height,
-      this.viewSize,
-      this.aspectRatio
-    )
+    this.camera = new GameCamera(this.width, this.height, this.viewSize, this.aspectRatio)
 
     // RENDERER
     this.renderer = createRenderer()
@@ -69,9 +61,8 @@ export class Game {
     // GAME LOOP
     const gameScene = new GameScene(this.scene)
     this.loop = new Loop(this.camera, gameScene, this.renderer)
-    this.loop.setInputManager(this.inputManager)
 
-    // LEVEL
+    // LEVEL EDITOR
     this.levelEditor = new LevelEditor(this.scene)
     const map = new TileMap(JSON_map_example.layers[0].data, 10)
     this.levelEditor.setMap(map)
@@ -83,8 +74,6 @@ export class Game {
   }
 
   start(): void {
-    this.updatables = []
-
     if (!this.renderer.domElement) return
 
     // Attach scene to the document
@@ -109,6 +98,7 @@ export class Game {
     this.renderLevel()
 
     // Start game loop
+    this.loop.addUpdatable(player)
     this.loop.start()
   }
 

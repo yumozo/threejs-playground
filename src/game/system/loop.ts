@@ -2,20 +2,22 @@ import { Clock, Scene, Vector2, WebGLRenderer } from 'three'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { RenderPixelatedPass } from 'three/examples/jsm/postprocessing/RenderPixelatedPass'
 
 import Stats from 'stats.js'
 import { GameCamera } from '@game/components/game-camera'
-// import { gamepadAPI } from '../controls/!gamepad-API'
 import { ShaderPassManager } from './post-processing/shader-pass-manager'
 import { createTestPass } from './post-processing/shader-pass-factory'
 import { InputManager } from '@game/system/input/input-manager'
 import { GameScene } from './game-scene'
+import { Updatable } from './updatable'
 
 /**
  * Game Loop. Keeps track of animated objects and renders the scene to the
  * camera on each frame.
  */
 export class Loop {
+  public updatables: Updatable[] = []
   private camera: GameCamera
   private scene: GameScene
   private renderer: WebGLRenderer
@@ -39,6 +41,7 @@ export class Loop {
     this.camera = camera
     this.scene = scene
     this.renderer = renderer
+    this.inputManager = InputManager.getInstance()
 
     // Init functions to play
     this.registeredFunctions = new Map()
@@ -60,16 +63,21 @@ export class Loop {
     )
     this.shaderPassManager.addPass('bloom', bloomPass)
 
-    // Add a custom shader effect to the ShaderPassManager
+    // Add Pixelation pass
+    const renderPixelatedPass = new RenderPixelatedPass(
+      2,
+      this.scene.getScene(),
+      this.camera.getCamera()
+    )
+    this.shaderPassManager.addPass('pixel', renderPixelatedPass)
+
+    // Add a custom shader effect to ShaderPassManager
     this.shaderPassManager.addPass(
       'custom_shader', // Identifier string
-      createTestPass(/* params */) // Instance of custom shader pass
+      createTestPass(/* params */) // Instance of a custom shader pass
     )
 
-    /**
-     * Remove the previously added custom shader effect from the
-     * ShaderPassManager
-     */
+    // Remove the previously added custom shader effect from ShaderPassManager
     this.shaderPassManager.removePass('custom_shader')
 
     // Init clock
@@ -123,6 +131,10 @@ export class Loop {
     this.renderer.setAnimationLoop(null)
   }
 
+  addUpdatable(updatable: Updatable) {
+    this.updatables.push(updatable)
+  }
+
   /**
    * Calls the function getDelta() from the "clock" object, which returns the
    * time elapsed since the last call of getDelta() and allows an animation to
@@ -144,7 +156,18 @@ export class Loop {
     for (const funcName in this.registeredFunctions) {
       const func = this.registeredFunctions.get(funcName)
       console.log(`[Loop/tick]: function ${func} should be played`)
-      func(time)
+      if (func) {
+        func(time)
+      }
+    }
+
+    for (const updatable in this.updatables) {
+      const obj = this.updatables[updatable]
+      if (obj) {
+          obj.update()
+        } else {
+        console.log('[Loop/tick]: no such updatable in the array')
+      }
     }
 
     // Should be in the GameScene

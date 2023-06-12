@@ -1,4 +1,4 @@
-import {  GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { TileObject, TileType } from '@game/game_objects/tile-object'
 import default_tile_model from '@assets/tiles/default_tile.gltf'
 import grass_tile_model from '@assets/tiles/grass_tile.gltf'
@@ -19,7 +19,7 @@ export class ModelLoader {
 
   private static instance: ModelLoader
   private tileModels: Map<TileType, three.Object3D>
-  private scene: three.Scene
+  private scene: three.Scene | undefined = undefined
   private loader: GLTFLoader
 
   private constructor() {
@@ -47,19 +47,19 @@ export class ModelLoader {
   ): undefined | three.Object3D {
     // Check this type of tile has already loaded as a model
 
-    if (
-      gameObject instanceof TileObject &&
-      this.tileModels.get(gameObject.type) !== undefined
-    ) {
+    if (gameObject instanceof TileObject && this.tileModels.get(gameObject.type) !== undefined) {
       const model = this.tileModels.get(gameObject.type)
-      // THIS IS NOT HAPPENING
-      console.log(model, 'already loaded')
+      if (model && scene) {
+        console.log(model, 'already loaded')
 
-      this.models.set(gameObject.name, model.clone())
+        this.models.set(gameObject.name, model.clone())
 
-      scene.add(this.models.get(gameObject.name))
+        scene.add(this.models.get(gameObject.name))
 
-      callback()
+        callback()
+      } else {
+        throw new Error('[ModelLoader/loadModel]: something goes wrong.')
+      }
       return
     }
 
@@ -74,10 +74,7 @@ export class ModelLoader {
 
         // In case if object is instance of TileObject add it to the
         // separate container
-        if (
-          gameObject instanceof TileObject &&
-          !this.tileModels.get(gameObject.type)
-        ) {
+        if (gameObject instanceof TileObject && !this.tileModels.get(gameObject.type)) {
           this.tileModels.set(gameObject.type, gltf.scene)
         }
 
@@ -101,12 +98,8 @@ export class ModelLoader {
     )
   }
 
-  public loadTileModel(
-    tileObject: TileObject,
-    scene?: three.Scene,
-    callback?: Function
-  ) {
-    let model: three.Object3D
+  public loadTileModel(tileObject: TileObject, scene?: three.Scene, callback?: Function) {
+    let model: three.Object3D | undefined
     switch (tileObject.type) {
       case TileType.Nothing:
         const box = new three.BoxGeometry(0.5, 0.5, 0.5)
@@ -116,43 +109,31 @@ export class ModelLoader {
           this.disposeModel(this.models.get(tileObject.name))
           this.models.set(tileObject.name, model)
         }
-        this.scene.add(model)
+        this.scene?.add(model)
         break
       case TileType.Ground:
-        model = this.loadModel(
-          default_tile_model,
-          tileObject,
-          this.scene,
-          callback
-        )
-        this.tileModels.set(TileType.Ground, model)
+        model = this.loadModel(default_tile_model, tileObject, this.scene, callback)
+        if (model) {
+          this.tileModels.set(TileType.Ground, model)
+        }
         break
       case TileType.Grass:
-        model = this.loadModel(
-          grass_tile_model,
-          tileObject,
-          this.scene,
-          callback
-        )
-        this.tileModels.set(TileType.Grass, model)
+        model = this.loadModel(grass_tile_model, tileObject, this.scene, callback)
+        if (model) {
+          this.tileModels.set(TileType.Grass, model)
+        }
         break
       case TileType.Dirt:
-        model = this.loadModel(
-          dirt_tile_model,
-          tileObject,
-          this.scene,
-          callback
-        )
-        this.tileModels.set(TileType.Dirt, model)
+        model = this.loadModel(dirt_tile_model, tileObject, this.scene, callback)
+        if (model) {
+          this.tileModels.set(TileType.Dirt, model)
+        }
         break
       case TileType.Water:
-        model = this.loadModel(
-          water_tile_model,
-          tileObject,
-          this.scene,
-          callback
-        )
-        this.tileModels.set(TileType.Water, model)
+        model = this.loadModel(water_tile_model, tileObject, this.scene, callback)
+        if (model) {
+          this.tileModels.set(TileType.Water, model)
+        }
         break
       default:
         throw new Error('[ModelLoader/loadTileModel]: Invalid tile type.')
@@ -167,7 +148,7 @@ export class ModelLoader {
       }
     })
 
-    this.scene.remove(model)
+    this.scene?.remove(model)
   }
 
   public disposeAllModels() {

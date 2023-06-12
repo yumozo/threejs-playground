@@ -1,10 +1,9 @@
+import * as three from 'three'
 import { ObjectControls } from '@game/controls/object-controls'
 import { TileType } from '@game/game_objects/tile-object'
-import { IUpdatable } from '@game/system/interface/IUpdatable'
+import { Updatable } from '@game/system/updatable'
 import { ModelLoader } from '@game/system/model-loader'
 import { AnimatedModel } from '@game/system/rendering/mesh'
-import * as three from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 export interface GameObjectConfig {
   name?: string
@@ -13,16 +12,16 @@ export interface GameObjectConfig {
   position?: three.Vector3
 }
 
-export class GameObject implements IUpdatable {
+export class GameObject implements Updatable {
   public readonly name: string
   public readonly loader: any
-  public readonly controls: ObjectControls
+  public readonly controls: ObjectControls | undefined = undefined
 
   protected position: three.Vector3
   protected type: any | TileType
   protected modelLoader: ModelLoader
   protected lookDirection: three.Vector3
-  protected model: three.Object3D
+  protected model: three.Object3D | undefined = undefined
 
   constructor(config?: GameObjectConfig) {
     // BINDS
@@ -32,8 +31,8 @@ export class GameObject implements IUpdatable {
     this.modelLoader = ModelLoader.getInstance()
 
     // Settings
-    this.name = config.name || 'noname'
-    this.position = config.position || new three.Vector3()
+    this.name = config?.name || 'noname'
+    this.position = config?.position || new three.Vector3()
     // this.model = this.modelLoader.models.get(this.name)
 
     // Look forward at spawn
@@ -44,7 +43,7 @@ export class GameObject implements IUpdatable {
   public loadModel(url: string, scene: three.Scene) {
     this.modelLoader.loadModel(url, this, scene, this.onModelLoad)
   }
-  
+
   protected onModelLoad(): void {
     this.model = this.modelLoader.models.get(this.name)
   }
@@ -53,11 +52,7 @@ export class GameObject implements IUpdatable {
     if (!this.model) {
       return this.position
     } else {
-      return new three.Vector3(
-        this.model.position.x,
-        this.model.position.y,
-        this.model.position.z
-      )
+      return new three.Vector3(this.model.position.x, this.model.position.y, this.model.position.z)
     }
   }
 
@@ -67,21 +62,6 @@ export class GameObject implements IUpdatable {
       this.model.position.copy(this.position) // Ignore the error
     }
   }
-  // public setModel(path: string): Promise<three.Object3D> {
-  //   const loader = new GLTFLoader()
-  //   return new Promise((resolve, reject) => {
-  //     loader.load(
-  //       path,
-  //       (gltf) => {
-  //         const model = gltf.scene
-  //         this.model = model
-  //         resolve(model)
-  //       },
-  //       undefined,
-  //       (err) => reject(err)
-  //     )
-  //   })
-  // }
 
   /**
    * Update frame...
@@ -95,6 +75,10 @@ export class GameObject implements IUpdatable {
   }
 
   public addTo(scene: three.Scene): void {
-    scene.add(this.model)
+    if (this.model) {
+      scene.add(this.model)
+    } else {
+      throw new Error('[GameObject/addTo]: Model is undefined')
+    }
   }
 }

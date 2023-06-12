@@ -11,18 +11,14 @@ export class GameCamera {
   private controls: CameraContols
   private readonly camera: three.OrthographicCamera
 
-  constructor(
-    width: number,
-    height: number,
-    viewSize = 40,
-    aspectRatio = width / height
-  ) {
+  constructor(width: number, height: number, viewSize = 40, aspectRatio = width / height) {
     // BINDS
     this.getCamera = this.getCamera.bind(this)
     this.updateView = this.updateView.bind(this)
+    this.setPosition = this.setPosition.bind(this)
 
     // Setup
-    this.controls = new CameraContols(this.camera)
+    this.controls = new CameraContols(this)
 
     // SETTINGS
     this.width = width
@@ -49,6 +45,10 @@ export class GameCamera {
     this.camera.zoom = 3
   }
 
+  public getCamera() {
+    return this.camera
+  }
+
   public updateView(canvas: HTMLCanvasElement) {
     const width = canvas.clientWidth
     const height = canvas.clientHeight
@@ -62,8 +62,10 @@ export class GameCamera {
   }
 
   public setPosition(target: any) {
-    if (arguments[0] instanceof three.Vector3) {
-      this.camera.position.copy(target as three.Vector3)
+    // if (arguments[0] instanceof three.Vector3) {
+    if (target instanceof three.Vector3) {
+      this.camera.position.copy(target)
+      // this.camera.position.set(target.x, target.y, target.z)
     } else if (
       arguments.length === 3 &&
       typeof arguments[0] &&
@@ -73,9 +75,5 @@ export class GameCamera {
       let [x, y, z] = arguments
       this.camera.position.set(x, y, z)
     }
-  }
-
-  public getCamera() {
-    return this.camera
   }
 }

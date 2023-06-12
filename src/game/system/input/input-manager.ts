@@ -1,13 +1,23 @@
-// import { gamepadAPI } from './gamepad-API'
-import { mapping } from '../config/GP_KEYMAP'
-import { GamepadInput } from './gamepad-input'
+import { gamepad_mapping } from '@game/system/config/gp_mapping'
+import { Updatable } from '@game/system/updatable'
+import { GamepadInput, GamepadStick } from '@game/system/input/gamepad-input'
+
+interface GamepadAxis {
+  axis: number
+  direction: 'positive' | 'negative'
+}
 
 /**
  * Manages keyboard and gamepad input events and* provides event registration
  * methods.
  * @todo *Separate into two
  */
-export class InputManager {
+export class InputManager implements Updatable {
+  /**
+   * The gamepad input object for processing gamepad events.
+   */
+  public readonly gamepadInput: GamepadInput
+
   private static instance: InputManager
   /**
    * A set to store the strings of keys that were registered using the
@@ -19,7 +29,7 @@ export class InputManager {
    * the `registerKeyDown()` method.
    */
   private readonly savedOnDownKeysAsNum: Set<number>
-  private readonly savedAxis: Set<number>
+  private readonly savedGamepadAxes: Map<string, Function>
   private readonly savedOnReleaseKeys: Set<string>
   /**
    * An object that maps strings representing gamepad button keys to action
@@ -37,37 +47,40 @@ export class InputManager {
    * The state of the gamepad buttons from the previous frame.
    */
   private readonly prevGamepadState: Map<string, boolean>
-  /**
-   * The gamepad input object for processing gamepad events.
-   */
-  private readonly gamepadInput: GamepadInput
+  private prevXValue = 0
+  private prevYValue = 0
 
-  private readonly adrStr: string
+  private listeners: { [eventName: string]: ((...args: any[]) => void)[] } = {}
 
   private constructor() {
-    // BINDS
+    // BINDINGS
     this.update = this.update.bind(this)
     this.registerKeyDown = this.registerKeyDown.bind(this)
 
-    this.adrStr = '[InputManager]: '
+    this.register = this.register.bind(this)
+    this.unregister = this.unregister.bind(this)
+    this.connectGamepad = this.connectGamepad.bind(this)
+    this.disconnectGamepad = this.disconnectGamepad.bind(this)
 
-    this.gamepadInput = new GamepadInput(mapping)
-
+    // SETTINGS
+    this.gamepadInput = new GamepadInput(gamepad_mapping)
     this.savedOnDownKeysAsStr = new Set()
     this.savedOnDownKeysAsNum = new Set()
     this.savedOnReleaseKeys = new Set()
     this.savedGamepadButtonsPress = new Map()
     this.savedGamepadButtonsDown = new Map()
     this.prevGamepadState = new Map()
+    this.savedGamepadAxes = new Map()
 
+    // TESTING ⬇️
     // HANDLE GAMEPAD CONNECTION
     window.addEventListener('gamepadconnected', (e) => {
-      const controller = e.gamepad
-      this.gamepadInput.connectGamepad(controller)
+      // const controller = e.gamepad
+      this.connectGamepad(e)
     })
     window.addEventListener('gamepaddisconnected', (e) => {
-      const controller = e.gamepad
-      this.gamepadInput.disconnectGamepad(controller)
+      // const controller = e.gamepad
+      this.disconnectGamepad(e)
     })
   }
 
@@ -117,6 +130,26 @@ export class InputManager {
         this.prevGamepadState[button] = false
       }
     }
+    // if (this.gamepadInput.hasLeftStick()) {
+    //   const x = this.gamepadInput.getAxis('leftStickX')
+    //   const y = this.gamepadInput.getAxis('leftStickY')
+    //   if (x !== 0 || y !== 0) {
+    //     this.playerControl.ph_move(x, -y)
+    //   }
+    // } else
+    for (const axis in this.savedGamepadAxes) {
+      const value = this.gamepadInput.getAxis(axis)
+      console.log('[InputManager/update]: axis value is ', value)
+      if (value !== 0) {
+        const action = this.savedGamepadAxes[axis]
+        if (action) {
+          action(value)
+          console.log('action is ', action, ' and the value is ', value)
+        } else {
+          // console.log(action)
+        }
+      }
+    }
   }
 
   /**
@@ -130,11 +163,12 @@ export class InputManager {
    * only once when pressed down. Default to false.
    * @throws An error if the `key` argument has an invalid type.
    */
-  registerKeyDown(
-    key: string | number,
+  public registerKeyDown(
+    key: string | number | GamepadAxis,
     action: Function,
     gamepadKey = false,
-    gamepadDown = false
+    gamepadDown = false,
+    axis = false
   ) {
     // Check for key type
     if (typeof key === 'string') {
@@ -142,12 +176,22 @@ export class InputManager {
       if (gamepadKey) {
         // pressed down, but not held down: event fires once button was pressed
         if (gamepadDown) {
-          if (this.savedGamepadButtonsDown[key]) return
+          if (this.savedGamepadButtonsDown.has(key)) return
           this.savedGamepadButtonsDown[key] = action
         } else {
-          if (this.savedGamepadButtonsPress[key]) return
+          if (this.savedGamepadButtonsPress.has(key)) return
           this.savedGamepadButtonsPress[key] = action
         }
+      } else if (axis) {
+        // const { axis, direction } = key
+
+        // if (this.savedGamepadAxes.has(axis + direction)) return
+        if (this.savedGamepadAxes.has(key)) return
+
+        // const sign = direction === 'negative' ? -1 : 1
+        // this.savedGamepadAxes.set(axis + direction, () => action(sign * this.gamepad.axes[axis]))
+
+        this.savedGamepadAxes[key] = action
       } else {
         if (this.savedOnDownKeysAsStr.has(key)) return
         window.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -167,54 +211,97 @@ export class InputManager {
       })
       this.savedOnDownKeysAsNum.add(key)
       // Invalid key type
+      // } else if (typeof key === 'object' && 'axis' in key) {
+      // } else if (typeof key === 'string') {
     } else {
       throw new Error('[InputManager/registerKeyDown]: Invalid key value.')
     }
-    console.log(this.adrStr + `key ${key} registered.`)
+    console.log('[InputManager]: ' + `key ${key} registered.`)
   }
+
+  public registerGamepadStick(
+    // stick: GamepadStick,
+    xAxis: string,
+    yAxis: string,
+    action: Function,
+    deadzone: number = 0.1
+  ): void {
+    // const xAxis = `${stick}.x`
+    // const yAxis = `${stick}.y`
+    let xValue: number
+    let yValue: number
+
+    this.registerKeyDown(
+      xAxis,
+      (value: number) => {
+        xValue = Math.abs(value) < deadzone ? 0 : value
+        if (0 === xValue && 0 === yValue) return
+        this.prevXValue = xValue
+        action(this.prevXValue, this.prevYValue)
+      },
+      false,
+      false,
+      true
+    )
+
+    this.registerKeyDown(
+      yAxis,
+      (value: number) => {
+        yValue = Math.abs(value) < deadzone ? 0 : -value
+        if (0 === yValue && 0 === xValue) return
+        this.prevYValue = yValue
+        action(this.prevXValue, this.prevYValue)
+      },
+      false,
+      false,
+      true
+    )
+  }
+
+  // public registerGamepadStick(
+  //   gamepadStick: GamepadStick,
+  //   action: (x: number, y: number) => {}
+  // ): void {
+  //   // Check for key type
+
+  //   if (this.savedAxis.has(gamepadAxis)) return // savedAxis
+  //   // if (this.savedAxis[gamepadAxis]) return
+
+  //   this.savedAxis[gamepadAxis] = action
+
+  //   // Add axis to saved
+  //   this.savedAxis.add(gamepadAxis)
+  //   console.log('[InputManager/registerGamepadStick]: ' + `Axis ${gamepadAxis} registered.`)
+  //   // } else {
+  //   //   // Invalid key type
+  //   //   throw new Error('[InputManager/registerGamepadStick]: Invalid gamepadStick argument value.')
+  //   // }
+  // }
+
+  /**
+   *  @todo not implemented. Check if the button was registered, reset. If wasn't throw an error.
+   */
+  public resetKeyDown(
+    key: string | number | GamepadAxis,
+    action: Function,
+    gamepadKey = false,
+    gamepadDown = false
+  ) {}
+
+  /**
+   * @todo Not implemented. Save current controls settings into JSON or whatever.
+   */
+  public saveSettings() {}
 
   // WIP⬇️
 
-  /**
-   * ...
-   * @param key
-   * @param gamepadAxis Gamepad axis ID. An Xbox controller has 4 axes IDs,
-   * where the first two for the left stick and the last two for the right
-   * one.
-   * @param action Event handler as a callback
-   * @returns
-   */
-  registerAxis(gamepadAxis: number, action: Function): void {
-    // Registering on gamepad axis
-    if (gamepadAPI.turbo) {
-      const axisStatus = gamepadAPI.axesStatus[gamepadAxis]
-      if (gamepadAPI.buttonPressed(axisStatus !== 0)) {
-        action()
-        console.log('Gamepad button pressed: ', axisStatus)
-      }
-    } else {
-      throw new Error('[InputManager/registerAxis]: No any gamepad connected.')
-    }
-    if (this.savedAxis.has(gamepadAxis)) {
-      return
-    }
-    // window.addEventListener('keydown', (e: KeyboardEvent) => {
-    //   if (e.key === key) {
-    //     func()
-    //   }
-    // })
-    this.savedAxis.add(gamepadAxis)
-
-    console.log(this.adrStr + `Axis ${gamepadAxis} registered.`)
-  }
-
-  removeOnKeyDown(key: string) {
+  public removeOnKeyDown(key: string) {
     if (this.savedOnDownKeys.has(key)) {
       this.savedOnDownKeys.delete(key)
-    } else console.warn(this.adrStr + 'no such key registered on press.')
+    } else console.warn('[InputManager]: ' + 'no such key registered on press.')
   }
 
-  onKeyUp(key: string, func: Function) {
+  public onKeyUp(key: string, func: Function) {
     if (this.savedOnReleaseKeys.has(key)) return
     window.addEventListener('keyup', (e: KeyboardEvent) => {
       if (e.which === key) {
@@ -222,12 +309,47 @@ export class InputManager {
       }
     })
     this.savedOnReleaseKeys.add(key)
-    console.log(this.adrStr + `key ${key} registered on release.`)
+    console.log('[InputManager]: ' + `key ${key} registered on release.`)
   }
 
-  removeOnKeyUp(key: string) {
+  public removeOnKeyUp(key: string) {
     if (this.savedOnReleaseKeys.has(key)) {
       this.savedOnReleaseKeys.delete(key)
-    } else console.warn(this.adrStr + 'no such key registered.')
+    } else console.warn('[InputManager]: ' + 'no such key registered.')
+  }
+
+  // ---
+
+  public register(eventType: string, listener: (...args: any[]) => void) {
+    if (!this.listeners[eventType]) {
+      this.listeners[eventType] = []
+    }
+    this.listeners[eventType].push(listener)
+    console.log('on register: ', this.listeners[eventType])
+  }
+
+  public unregister(eventType: string, listener: (...args: any[]) => void) {
+    if (this.listeners[eventType]) {
+      this.listeners[eventType] = this.listeners[eventType].filter((l) => l !== listener)
+    }
+    console.log('on unregister: ', this.listeners[eventType])
+  }
+
+  public connectGamepad = (event: GamepadEvent) => {
+    this.gamepadInput.connectGamepad(event.gamepad)
+    this.emit('gamepadconnected', event)
+  }
+
+  public disconnectGamepad = (event: GamepadEvent) => {
+    this.gamepadInput.disconnectGamepad(event.gamepad)
+    this.emit('gamepaddisconnected', event)
+  }
+
+  private emit(eventName: string, ...args: any[]) {
+    if (this.listeners[eventName]) {
+      this.listeners[eventName].forEach((listener) => {
+        listener(...args)
+      })
+    }
   }
 }

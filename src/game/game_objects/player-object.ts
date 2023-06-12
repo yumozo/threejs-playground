@@ -4,8 +4,6 @@ import { PlayerControl as PlayerControls } from '@game/controls/player-controls'
 import { GameCamera } from '@game/components/game-camera'
 
 interface PlayerConfig extends GameObjectConfig {
-  // speed: number
-  // camera?: three.Camera
   camera: GameCamera
 }
 
@@ -15,7 +13,7 @@ interface PlayerConfig extends GameObjectConfig {
  * @param camera Camera to be attached to the player object. Is optional parameter.
  */
 export class PlayerObject extends GameObject {
-  public controls: PlayerControls
+  public controls: PlayerControls | undefined
   private camera: GameCamera
 
   constructor(config: PlayerConfig) {
@@ -23,39 +21,52 @@ export class PlayerObject extends GameObject {
 
     // BINDS
     this.onModelLoad = this.onModelLoad.bind(this)
-    this.attachCamera = this.attachCamera.bind(this)
+    this.update = this.update.bind(this)
+    // this.attachCamera = this.attachCamera.bind(this)
 
-    // Adding CAMERA if provided
     this.camera = config.camera
   }
 
-  public update() {
+  public override update() {
     if (this.model) {
-      this.camera.setPosition(this.model.position)
+      // this.camera.setPosition(this.model.position)
+      const camera = this.camera.getCamera()
+      const playerPosition = this.model.position.clone()
+      // const shift = 
+      const cameraPosition = playerPosition.add(new three.Vector3(5, 5, -5))
+      camera.position.copy(cameraPosition)
+    } else {
+      console.warn('[PlayerObject/moveTo]: model is not provided.')
     }
-    // You can include any update code here
-    // For example, you might want to check if the player has collided with anything
   }
 
   protected override onModelLoad(): void {
     this.model = this.modelLoader.models.get(this.name)
-    this.model.attach(this.camera.getCamera())
-    this.controls = new PlayerControls(this.model)
-    this.controls.setupControls()
+    // this.model.attach(this.camera.getCamera())
+    if (this.model) {
+      this.controls = new PlayerControls(this.model)
+      this.controls.setupControls()
+    } else {
+      throw new Error('[PlayerObject/onModelLoad]: model is not provided.')
+    }
   }
 
-  /**
-   * Attach new camera instance, that is replacing the exisiting one.
-   * @param camera New camera instance
-   */
-  public attachCamera(camera: three.Camera) {
-    // Remove old camera
-    this.model.remove(this.camera.getCamera())
-    // Attach new one
-    this.model.attach(camera)
-  }
+  // /**
+  //  * Attach new camera instance, that is replacing the exisiting one.
+  //  * @param camera New camera instance
+  //  */
+  // public attachCamera(camera: three.Camera) {
+  //   // Remove old camera
+  //   this.model.remove(this.camera.getCamera())
+  //   // Attach new one
+  //   this.model.attach(camera)
+  // }
 
   public moveTo(position: three.Vector3) {
-    this.model.position.copy(position)
+    if (this.model) {
+      this.model.position.copy(position)
+    } else {
+      throw new Error('[PlayerObject/moveTo]: model is not provided.')
+    }
   }
 }

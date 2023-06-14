@@ -1,5 +1,5 @@
 import * as three from 'three'
-import { GameObject } from './game_objects/game-object'
+import { GameObject } from './objects/game-object'
 
 class Game {
   private player: GameObject

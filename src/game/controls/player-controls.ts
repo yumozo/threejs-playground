@@ -6,6 +6,9 @@ export class PlayerControl extends ObjectControls {
   private isJumping: boolean
   private isMovingLeft: boolean
   private isMovingRight: boolean
+  private isFalling: boolean
+
+  private GROUND_LEVEL: number = 0
 
   constructor(object: three.Object3D) {
     super(object)
@@ -13,34 +16,53 @@ export class PlayerControl extends ObjectControls {
     // BINDS
     this.update = this.update.bind(this)
     this.setJumping = this.setJumping.bind(this)
+    // this.isFalling = this.isFalling.bind(this)
     this.setMovingLeft = this.setMovingLeft.bind(this)
     this.setMovingRight = this.setMovingRight.bind(this)
+    this.setupControls = this.setupControls.bind(this)
 
     // this.input = input
     this.isJumping = false
     this.isMovingLeft = false
     this.isMovingRight = false
+    this.isFalling = false
   }
-  update(time: number) {
-    // Apply gravity
-    this.velocity.y -= 9.8 * time
+  public override update(time: number) {
+    super.update(time)
 
-    // Move left/right
-    const acceleration = 10 * time
-    if (this.isMovingLeft) {
-      this.velocity.x -= acceleration
+    // If above the ground don't allow to jump
+    if (this.position.y > 0) {
+      this.isJumping = false
     }
-    if (this.isMovingRight) {
-      this.velocity.x += acceleration
+
+    // Apply gravity and check for falling status
+    if (this.position.y > this.GROUND_LEVEL || this.velocity.y > 0) {
+      // Only apply gravity if the player is above the ground or moving upwards
+
+      this.velocity.y -= 9.8 * time
+    } else {
+      // If the player is below the ground, stop its velocity and reset falling status
+      this.velocity.y = 0
+      this.position.y = this.GROUND_LEVEL
+      /* this.falling = false */
+    }
+
+    if (this.velocity.y < 0) {
+      // If the player is moving downwards and is not already falling, set falling to true
+      this.isFalling = true
+    } else {
+      this.isFalling = false
     }
 
     // Jumping logic
-    if (this.isJumping && !this.isFalling()) {
-      this.velocity.y = 10
+    if (this.isJumping && !this.isFalling) {
+      this.velocity.y = 5
+      this.isJumping = false
     }
 
     // Set the object position based on the computed velocity
-    this.position.add(this.velocity.clone().multiplyScalar(time))
+    const vel = this.velocity.clone()
+    this.position.add(vel.multiplyScalar(time))
   }
 
   public setupControls() {
@@ -62,7 +84,7 @@ export class PlayerControl extends ObjectControls {
     inputManager.registerKeyDown('DPAD_DOWN', this.moveBackward, true)
     inputManager.registerKeyDown('DPAD_RIGHT', this.moveRight, true)
     inputManager.registerKeyDown('DPAD_LEFT', this.moveLeft, true)
-    inputManager.registerKeyDown('X', () => this.setJumping(true), true)
+    inputManager.registerKeyDown('A', () => this.setJumping(true), true, true)
     inputManager.registerKeyDown(
       'BACK',
       () => {
@@ -85,9 +107,9 @@ export class PlayerControl extends ObjectControls {
   }
 
   // Checks if the object is currently falling
-  private isFalling() {
-    return this.velocity.y < 0
-  }
+  // private isFalling() {
+  //   return this.velocity.y < 0
+  // }
 
   // dispose() {
   //   document.removeEventListener('keydown', this.onKeyDown)

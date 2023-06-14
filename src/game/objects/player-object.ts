@@ -27,7 +27,9 @@ export class PlayerObject extends GameObject {
     this.camera = config.camera
   }
 
-  public override update() {
+  public override update(time: number) {
+    super.update(time)
+
     if (this.model) {
       // this.camera.setPosition(this.model.position)
       const camera = this.camera.getCamera()
@@ -36,31 +38,20 @@ export class PlayerObject extends GameObject {
       const cameraPosition = playerPosition.add(new three.Vector3(5, 5, -5))
       camera.position.copy(cameraPosition)
     } else {
-      console.warn('[PlayerObject/moveTo]: model is not provided.')
+      console.warn(`[PlayerObject/moveTo] ${this.name}: model is not provided.`)
     }
   }
 
   protected override onModelLoad(): void {
-    this.model = this.modelLoader.models.get(this.name)
-    // this.model.attach(this.camera.getCamera())
+    super.onModelLoad()
+
     if (this.model) {
       this.controls = new PlayerControls(this.model)
       this.controls.setupControls()
     } else {
-      throw new Error('[PlayerObject/onModelLoad]: model is not provided.')
+      throw new Error(`[PlayerObject/onModelLoad] ${this.name}: model is not provided.`)
     }
   }
-
-  // /**
-  //  * Attach new camera instance, that is replacing the exisiting one.
-  //  * @param camera New camera instance
-  //  */
-  // public attachCamera(camera: three.Camera) {
-  //   // Remove old camera
-  //   this.model.remove(this.camera.getCamera())
-  //   // Attach new one
-  //   this.model.attach(camera)
-  // }
 
   public moveTo(position: three.Vector3) {
     if (this.model) {

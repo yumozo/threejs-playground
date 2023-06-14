@@ -1,11 +1,11 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { TileObject, TileType } from '@game/game_objects/tile-object'
+import { TileObject, TileType } from '@game/objects/tile-object'
 import default_tile_model from '@assets/tiles/default_tile.gltf'
 import grass_tile_model from '@assets/tiles/grass_tile.gltf'
 import water_tile_model from '@assets/tiles/water_tile.gltf'
 import dirt_tile_model from '@assets/tiles/dirt_tile.gltf'
 import * as three from 'three'
-import { GameObject } from '@game/game_objects/game-object'
+import { GameObject } from '@game/objects/game-object'
 
 /**
  * Fixes webpack troubles with GLTF assets loading
@@ -15,8 +15,7 @@ export class ModelLoader {
   /**
    * @todo idk yet get model by object's name or by object itself.
    */
-  public models: Map<GameObject | string, three.Object3D>
-
+  private models: Map<GameObject | string, three.Object3D>
   private static instance: ModelLoader
   private tileModels: Map<TileType, three.Object3D>
   private scene: three.Scene | undefined = undefined
@@ -39,6 +38,15 @@ export class ModelLoader {
     return ModelLoader.instance
   }
 
+  public getModel(modelName: string) {
+    const model = this.models.get(modelName)
+    if (model) {
+      return model
+    } else {
+      throw new Error('[ModelLoader/getModel]: model not found.')
+    }
+  }
+
   public loadModel(
     url: string,
     gameObject: GameObject,
@@ -53,10 +61,18 @@ export class ModelLoader {
         console.log(model, 'already loaded')
 
         this.models.set(gameObject.name, model.clone())
+        const m = this.models.get(gameObject.name)
+        if (m) {
+          scene.add(m)
+        } else {
+          throw new Error('[ModelLoader/loadModel]: no such model in collection.')
+        }
 
-        scene.add(this.models.get(gameObject.name))
-
-        callback()
+        if (callback) {
+          callback()
+        } else {
+          throw new Error("[ModelLoader/loadModel]: no callback provided.")
+        }
       } else {
         throw new Error('[ModelLoader/loadModel]: something goes wrong.')
       }

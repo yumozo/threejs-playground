@@ -5,10 +5,10 @@ export class ObjectControls implements Updatable {
   protected object: three.Object3D
   protected position: three.Vector3 = new three.Vector3()
   protected velocity: three.Vector3 // Not used yet
-  protected speed = 0.1
+  protected speed = 0.02
 
-  protected horizontalAxis: number
-  protected verticalAxis: number
+  // protected horizontalAxis: number
+  // protected verticalAxis: number
 
   // Constructor to initialize position and velocity
   constructor(object: three.Object3D) {
@@ -17,6 +17,7 @@ export class ObjectControls implements Updatable {
     this.moveBackward = this.moveBackward.bind(this)
     this.moveRight = this.moveRight.bind(this)
     this.moveLeft = this.moveLeft.bind(this)
+    this.move = this.move.bind(this)
     // experimental
     this.ph_move = this.ph_move.bind(this)
     this.ph_moveForward = this.ph_moveForward.bind(this)
@@ -29,13 +30,13 @@ export class ObjectControls implements Updatable {
     // this.position = initialPosition
     this.velocity = new three.Vector3()
 
-    this.horizontalAxis = 0
-    this.verticalAxis = 0
+    // this.horizontalAxis = 0
+    // this.verticalAxis = 0
   }
 
   // Updates the position of object based on input
   public update(time: number /* input: Input */) {
-    // Implement the logic for moving the object here using user's input
+    this.object.position.copy(this.position)
   }
 
   // WIP ⬇️
@@ -53,7 +54,8 @@ export class ObjectControls implements Updatable {
     direction.copy(nextPosition)
 
     // Calculate the movement vector
-    const currentPosition = this.object.position.clone()
+    // const currentPosition = this.object.position.clone()
+    const currentPosition = this.position
     const movementVector = direction.sub(currentPosition)
 
     console.log('direction: ', movementVector)
@@ -64,7 +66,8 @@ export class ObjectControls implements Updatable {
     if (movementVector.length() < 0.01) return
     const whereToLook = new three.Vector3()
     // Current position + movementVector  = look direction
-    whereToLook.addVectors(this.object.position.clone(), movementVector)
+    // whereToLook.addVectors(this.object.position.clone(), movementVector)
+    whereToLook.addVectors(this.position, movementVector)
 
     // Set the rotation
     this.object.lookAt(whereToLook)
@@ -95,38 +98,46 @@ export class ObjectControls implements Updatable {
   // }
 
   moveForward(): void {
-    const movementVector = this.object.position.clone()
+    // const movementVector = this.object.position.clone()
+    const movementVector = this.position.clone()
     movementVector.z += this.speed
 
     const movement = () => {
-      this.object.position.copy(movementVector)
+      // this.object.position.copy(movementVector)
+      this.position.copy(movementVector)
     }
     this.move(movement, movementVector)
   }
   moveBackward(): void {
-    const movementVector = this.object.position.clone()
+    // const movementVector = this.object.position.clone()
+    const movementVector = this.position.clone()
     movementVector.z -= this.speed
 
     const movement = () => {
-      this.object.position.copy(movementVector)
+      // this.object.position.copy(movementVector)
+      this.position.copy(movementVector)
     }
     this.move(movement, movementVector)
   }
   moveRight(): void {
-    const movementVector = this.object.position.clone()
+    // const movementVector = this.object.position.clone()
+    const movementVector = this.position.clone()
     movementVector.x -= this.speed
 
     const movement = () => {
-      this.object.position.copy(movementVector)
+      // this.object.position.copy(movementVector)
+      this.position.copy(movementVector)
     }
     this.move(movement, movementVector)
   }
   moveLeft(): void {
-    const movementVector = this.object.position.clone()
+    // const movementVector = this.object.position.clone()
+    const movementVector = this.position.clone()
     movementVector.x += this.speed
 
     const movement = () => {
-      this.object.position.copy(movementVector)
+      // this.object.position.copy(movementVector)
+      this.position.copy(movementVector)
     }
     this.move(movement, movementVector)
   }
@@ -137,7 +148,8 @@ export class ObjectControls implements Updatable {
     velocity.multiplyScalar(this.speed)
 
     const movement = () => {
-      this.object.position.add(velocity)
+      // this.object.position.add(velocity)
+      this.position.add(velocity)
     }
 
     // this.animate(movement)

@@ -1,4 +1,4 @@
-import { TileObject, TileType } from "@game/game_objects/tile-object";
+import { TileObject, TileType } from "@game/objects/tile-object";
 import { ModelLoader } from "../model-loader";
 
 describe("ModelLoader", () => {

@@ -1,6 +1,6 @@
 import { gamepad_mapping } from '@game/system/config/gp_mapping'
 import { Updatable } from '@game/system/updatable'
-import { GamepadInput, GamepadStick } from '@game/system/input/gamepad-input'
+import { GamepadInput } from '@game/system/input/gamepad-input'
 
 interface GamepadAxis {
   axis: number
@@ -13,12 +13,19 @@ interface GamepadAxis {
  * @todo *Separate into two
  */
 export class InputManager implements Updatable {
+  private static instance: InputManager
+
+  public static getInstance() {
+    if (!InputManager.instance) {
+      InputManager.instance = new InputManager()
+    }
+    return InputManager.instance
+  }
+
   /**
    * The gamepad input object for processing gamepad events.
    */
   public readonly gamepadInput: GamepadInput
-
-  private static instance: InputManager
   /**
    * A set to store the strings of keys that were registered using the
    * `registerKeyDown()` method.
@@ -82,13 +89,6 @@ export class InputManager implements Updatable {
       // const controller = e.gamepad
       this.disconnectGamepad(e)
     })
-  }
-
-  public static getInstance() {
-    if (!InputManager.instance) {
-      InputManager.instance = new InputManager()
-    }
-    return InputManager.instance
   }
 
   /**

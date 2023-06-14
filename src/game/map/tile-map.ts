@@ -1,5 +1,5 @@
 import { ICoordinates, RowFirstCoordinates } from './coordinates'
-import { TileType } from '../game_objects/tile-object'
+import { TileType } from '../objects/tile-object'
 
 /**
  * Used to represent an area without having to carry around a tile array.

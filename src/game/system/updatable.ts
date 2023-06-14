@@ -1,3 +1,3 @@
 export abstract class Updatable {
-  update(time?: number): void {}
+  update(time: number): void {}
 }

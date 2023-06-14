@@ -1,7 +1,7 @@
 // import the shader.js module
 import CustomShader from './shaders/test-shader'
 
-const ShaderPassFactory = function <T extends { new(...args: any[]): any }>(
+const PassFactory = function <T extends { new (...args: any[]): any }>(
   shaderClass: T,
   options: object
 ): InstanceType<T> {
@@ -10,7 +10,7 @@ const ShaderPassFactory = function <T extends { new(...args: any[]): any }>(
 
 export const createTestPass = function () {
   // Set any options necessary for the shader pass
-  const options = {} 
+  const options = {}
   // Create a new instance of MyShaderPass
-  return ShaderPassFactory(CustomShader.MyShaderPass, options) 
+  return PassFactory(CustomShader.MyShaderPass, options)
 }

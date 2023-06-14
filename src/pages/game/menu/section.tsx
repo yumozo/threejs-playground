@@ -41,8 +41,8 @@ const SectionHeading = styled.h4<{ folded: boolean }>`
 
 const StyledSection = styled.section`
   width: 200px;
-  padding: 0.25rem 0.5rem;
-  margin-bottom: 1rem;
+  padding: 0rem 0.5rem;
+  /* margin-bottom: 0.05rem; */
 `
 
 export default function Section({ children, heading }) {

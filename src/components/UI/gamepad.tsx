@@ -81,20 +81,6 @@ export default function GamepadControlsCheck() {
           </td>
         </tr>
       )
-    // } else {
-    //   return (
-    //     <tr key={buttonName}>
-    //       <td style={{ textAlign: 'center' }}>{button}</td>
-    //       <td>
-    //         {buttonPresses[button] ? (
-    //           <span style={{ color: 'green' }}>{buttonPresses[button]}</span>
-    //         ) : (
-    //           <span style={{ color: 'red' }}>False</span>
-    //         )}
-    //       </td>
-    //     </tr>
-    //   )
-    // }
   })
 
   const gamepadAxisDisplay = (

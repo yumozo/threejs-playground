@@ -85,7 +85,7 @@ const SectionHeading = styled.h3`
   font-family: var(--font-mono);
 `
 
-const DragHandle = styled.div`
+const FoldButton = styled.div`
   height: 16px;
   position: absolute;
   top: 0;
@@ -100,4 +100,4 @@ const DragHandle = styled.div`
   font-size: 0.9;
 `
 
-export { StyledMenu, SectionHeading, ButtonList, OptionSelect, DragHandle }
+export { StyledMenu, SectionHeading, ButtonList, OptionSelect, FoldButton }

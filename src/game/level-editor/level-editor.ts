@@ -1,6 +1,6 @@
 import * as three from 'three'
-import { TileObject } from '../game_objects/tile-object'
-import { TileMap } from './tile-map'
+import { TileObject } from '../objects/tile-object'
+import { TileMap } from '../map/tile-map'
 import { ModelLoader } from '@game/system/model-loader'
 
 export default class LevelEditor {
@@ -31,7 +31,7 @@ export default class LevelEditor {
       height: this.map.height
     }
     const { tiles } = this.map.getRegion(region)
-    console.log('to check tiles count: ', tiles)
+    console.log('[LevelEditor/populateMap]: to check tiles count: ', tiles)
 
     const position = new three.Vector3(0, 0, 0)
     for (const tileIndex in tiles) {
@@ -44,7 +44,7 @@ export default class LevelEditor {
 
       // Create a 3D tile model
       const tileObject = new TileObject({
-        name: "tile" + position.x + position.z,
+        name: 'tile' + position.x + position.z,
         position,
         type: tileType
       })
@@ -52,15 +52,14 @@ export default class LevelEditor {
       modelLoader.setScene(this.scene)
       // modelLoader.loadTileModel(tileObject)
       tileObject.loadModel(undefined, this.scene)
+      const pos = tileObject.getPosition()
+      console.log(`[LevelEditor/populateMap]: Pos ${tileObject.name} -> (${pos.x} ${pos.y} ${pos.z})` )
       // ...then add it to the scene
-      // tileModel.addTo(this.scene)
 
       position.x++
     }
 
-    console.log(
-      '[LevelEditor/render]: Level has initianted and rendered!'
-    )
+    console.log('[LevelEditor/render]: Level has initianted and rendered!')
   }
 
   public addTile(tile: TileObject): void {

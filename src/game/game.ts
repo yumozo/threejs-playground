@@ -4,20 +4,23 @@ import { createRenderer } from './system/renderer'
 import { GameCamera } from './components/game-camera'
 import { createGizmo } from './components/gizmo'
 import { createLight as createDirectionalLight } from './components/light'
-import { InputManager } from './system/input/input-manager'
-
 import LevelEditor from './level-editor/level-editor'
+import { Loop } from '@game/system/loop'
+import { TileMap } from '@game/map/tile-map'
+import { PlayerObject } from '@game/objects/player-object'
+import { ModelLoader } from './system/model-loader'
+import { GameObject } from './objects/game-object'
+import { GameScene } from '@game/system/game-scene'
 
 import girl_model from '@assets/girl/rigged_girl.glb'
 import slime_model from '@assets/slime/slime.glb'
 import { JSON_map_example } from './JSON_map_example'
-import { Loop } from '@game/system/loop'
-import { TileMap } from '@game/level-editor/tile-map'
-import { PlayerObject } from '@game/game_objects/player-object'
-import { ModelLoader } from './system/model-loader'
-import { GameObject } from './game_objects/game-object'
-import { GameScene } from '@game/system/game-scene'
-import { Updatable } from '@game/system/updatable'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
+import { PassManager } from './system/post-processing/pass-manager'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
+import { RenderPixelatedPass } from 'three/examples/jsm/postprocessing/RenderPixelatedPass'
+import { createTestPass } from './system/post-processing/pass-factory'
 
 export class Game {
   // Should be in the camera class ⬇️
@@ -29,11 +32,13 @@ export class Game {
   private sceneContainer: HTMLElement
   // OK ⬇️
   private loop: Loop
+  private shaderPassManager: PassManager | undefined
   private readonly viewSize: number // ❔ to the camera
   private readonly renderer: three.WebGLRenderer
   private readonly scene: three.Scene
   private readonly camera: GameCamera
   private readonly levelEditor: LevelEditor
+  private readonly composer: EffectComposer
 
   constructor(container: HTMLElement) {
     // BINDS
@@ -58,9 +63,12 @@ export class Game {
     // RENDERER
     this.renderer = createRenderer()
 
+    // EFFECT COMPOSER
+    this.composer = new EffectComposer(this.renderer)
+
     // GAME LOOP
     const gameScene = new GameScene(this.scene)
-    this.loop = new Loop(this.camera, gameScene, this.renderer)
+    this.loop = new Loop(this.camera, gameScene, this.renderer, this.composer)
 
     // LEVEL EDITOR
     this.levelEditor = new LevelEditor(this.scene)
@@ -97,7 +105,40 @@ export class Game {
     // LEVEL EDIT (but now is just build it)
     this.renderLevel()
 
-    // Start game loop
+    // EFFECT COMPOSER
+    // Setup an EffectComposer for post-processing
+    const renderPass = new RenderPass(this.scene, this.camera.getCamera())
+    this.composer.addPass(renderPass)
+
+    // Setup a ShaderPassManager to manage shader passes
+    this.shaderPassManager = PassManager.getInstance(this.composer)
+    // Add a bloom effect with given parameters to the ShaderPassManager
+    const bloomPass = new UnrealBloomPass(
+      new three.Vector2(window.innerWidth, window.innerHeight), // resolution
+      0.2, // strength
+      0.1, // radius
+      0 // threshold
+    )
+    this.shaderPassManager.addPass('bloom', bloomPass)
+
+    // Add Pixelation pass
+    const renderPixelatedPass = new RenderPixelatedPass(
+      2,
+      this.scene,
+      this.camera.getCamera()
+    )
+    this.shaderPassManager.addPass('pixel', renderPixelatedPass)
+
+    // Add a custom shader effect to ShaderPassManager
+    this.shaderPassManager.addPass(
+      'custom_shader', // Identifier string
+      createTestPass(/* params */) // Instance of a custom shader pass
+    )
+
+    // Remove the previously added custom shader effect from ShaderPassManager
+    this.shaderPassManager.removePass('custom_shader')
+
+    // START GAME LOOP
     this.loop.addUpdatable(player)
     this.loop.start()
   }
@@ -108,8 +149,5 @@ export class Game {
 
   private renderLevel() {
     this.levelEditor.populateMap()
-    const modelLoader = ModelLoader.getInstance()
-
-    console.log(this.scene.children)
   }
 }
